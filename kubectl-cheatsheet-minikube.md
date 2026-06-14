@@ -1,5 +1,171 @@
 # Kubectl Cheat Sheet (Minikube)
 
+## 0. Kiem tra verion
+
+``` bash
+# Kiem tra verion cua k8s
+kubectl version --client
+
+# Kiem tra verion cua minikube
+minikube version
+
+# Khởi động Minikube
+minikube start
+
+# Kiểm tra trạng thái
+minikube status
+
+# Xem pod voi tat ca namespace
+kubectl get pods -A # Hoặc: kubectl get po -A
+
+# Xem node
+kubectl get nodes
+
+# Xem pod voi default namespace
+kubectl get pods # Hoac: kubectl get po
+
+# Chay 1 pod voi ten la app1 va image la image tren dockerhub, vietaws/eks (ubuntu), vietaws/arm (macos chip M)
+kubectl run app1 --image=vietaws/eks:v1
+
+# Mornitor trang thai pods chay
+kubectl get pods --watch # Hoac: kubectl get pods -w
+
+# Xem thong tin cua pods
+kubectl describe pods app1
+
+# Trong truong hop minh update version o tren dockerhub thi khi chay mot cai image thi minh phai them '--image-pull-policy Always'
+kubectl run --image=vietaws/eks:v1 --image-pull-policy Always
+
+# Co 2 cach de expose port cua pods ra ben ngoai: NodePort va LoadBalancer. LoadBalancer dung trong cong cu cloud provider ELP, con NodePort thi expose dang node theo dai port 30,000 -> 32,767 (random)
+
+# De muon goi tu ung dung ben ngoai vao trong noi bo cluster thi phai tao 1 cai service (svc)
+kubectl get services # Hoac kubectl get svc
+
+# Muon expose ra ben ngoai thi dung
+kubectl expose --help
+kubectl expose service nginx --port=443 --target-port=8443 --name=nginx-https
+kubectl expose pods app1 --port=8081 --target-port=8080 --name=service1 --type=NodePort
+kubectl get svc
+
+# Xem thong tin chi tiet cua mot cai port
+kubectl describe svc service1
+kubectl get svc
+kubectl get nodes
+kubectl get nodes -o wide # Xem thong tin chi tiet
+
+# Expose port ra ben ngoai (minikube)
+minikube service service1 --url
+
+kubectl describe pods app1
+kubectl get svc
+
+# Xem log cua pods
+kubectl logs app1
+kubectl logs app1 -f
+
+# Trong truong hop 1 pod co nhieu container thi phai dung cu phap khac
+kubectl logs app1 -c app1 log1 -f
+
+# Kiem thu chui vao pods va container (exec)
+kubectl exec -it app1 -- ls
+kubectl exec -it app1 -- cat index.js
+kubectl exec -it app1 -- sh
+
+# Imperative vs Declarative (Imperative la go tung lenh 1, Declarative dung file yml)
+kubectl apply -f pod.yml
+kubectl get pods -w
+kubectl describe pods simple-app
+
+# ReplicaSet: Dinh nghia toi muon chay 1 nhom cac con pod, voi so luong la replicas: 3
+kubectl get pods
+kubectl get replicasets.apps # Hoac kubectl get rs
+
+kubectl apply -f replicaset-rs.yml
+kubectl get rs
+kubectl delete -f replicaset-rs.yml # Hoac kubectl delete rs rs3
+kubectl get po
+
+kubectl describe replicasets.apps rs3
+kubectl describe rs rs3
+
+kubectl get pods
+kubectl delete pod rs3-nhgjq # Sau khi xoa 1 pod thi tu dong tao 1 con pod moi
+
+kubectl get svc
+kubectl get rs
+kubectl delete rs rs3
+
+# ReplicaSet: Hieu ra cach dung selector
+kubectl run app3-manual --image vietaws/eks:v3 --labels="app=app3,env=prod"
+kubectl get pods
+kubectl describe pods app3-manual
+kubectl apply -f replicaset-rs.yml
+kubectl get rs
+kubectl get pods
+
+# Expose ReplicaSet Imperative
+kubectl get pods
+kubectl get rs
+kubectl get svc
+kubectl expose rs rs3 --name=service3 --type=NodePort --port=8080
+kubectl get svc
+kubectl get nodes -o wide
+minikube service service3 --url
+
+# Expose ReplicaSet Declarative
+kubectl get svc
+kubectl apply -f nodeport.yml
+kubectl get svc
+minikube service service3-declarative --url
+kubectl get pods
+
+# Edit ReplicaSet và Giới Thiệu Deployment
+kubectl get src
+kubectl edit rs rs3 # thay doi image:v3 -> image:v4 thi phai xoa pods cu di, con thay doi replica 3 -> 4 thi khong can xoa
+kubectl get po
+
+kubectl get pods
+kubectl delete pods rs3-9rks9 rs3-pknww rs3-w8zrv app3-manual
+kubectl get pods
+kubectl describe pods rs3-4gt82
+kubectl get svc
+minikube service service3-declarative --url
+
+# Create Deployment Imperative
+kubectl delete rs rs3
+kubectl get rs
+kubectl get pods
+kubectl delete pod app1 simple-app
+kubectl get pods
+kubectl get svc
+kubectl delete svc service1 service3 service3-declarative
+kubectl get svc
+
+kubectl create deployment --help
+kubectl create deploy app1-deploy --image vietaws/eks:v1 --port 8080 # Hoac kubectl create deployment app1-deploy --image vietaws/eks:v1 --port 8080
+kubectl get deployment
+kubectl get svc
+kubectl get rs
+kubectl get pods
+kubectl describe pod app1-deploy-9686c96f9-qrh5c
+
+# Create Deployment Declarative
+kubectl apply -f deploy1.yml
+kubectl get pods
+kubectl get rs
+kubectl get deploy
+kubectl describe deployment nginx-deployment
+kubectl get deployment
+kubectl get svc
+kubectl get rs
+kubectl expose deployment app1-deploy --type=NodePort --port=8080 --target-port=8080
+kubectl get svc
+kubectl expose deployment nginx-deployment --type=NodePort --port=8081 --target-port=8080
+kubectl get svc
+minikube service app1-deploy --url
+minikube service nginx-deployment --url
+```
+
 ## 1. Minikube
 
 ``` bash

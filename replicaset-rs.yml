@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: rs3
+  labels:
+    app: app-rs-3
+    tier: rs
+spec:
+  # modify replicas according to your case
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app3
+  template:
+    metadata:
+      labels:
+        app: app3
+        project: demo
+    spec:
+      containers:
+        - name: simple-app
+          image: vietaws/eks:v3

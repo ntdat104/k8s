@@ -1,0 +1,102 @@
+# API version của resource ReplicaSet
+apiVersion: apps/v1
+
+# Loại resource muốn tạo
+kind: ReplicaSet
+
+# Metadata của ReplicaSet
+metadata:
+  # Tên ReplicaSet (unique trong namespace)
+  name: payment-api-prod-rs
+
+  # Labels gắn cho chính ReplicaSet
+  labels:
+    # Tên logic của ứng dụng
+    app.kubernetes.io/name: payment-api
+
+    # Instance cụ thể của ứng dụng
+    # Ví dụ:
+    # payment-api-dev
+    # payment-api-staging
+    # payment-api-prod
+    app.kubernetes.io/instance: payment-api-prod
+
+    # Thành phần trong hệ thống
+    # frontend/backend/worker/database...
+    app.kubernetes.io/component: backend
+
+    # Ứng dụng thuộc hệ thống lớn nào
+    app.kubernetes.io/part-of: ecommerce
+
+    # Công cụ quản lý resource này
+    # kubectl / helm / argocd / terraform
+    app.kubernetes.io/managed-by: kubectl
+
+    # Môi trường triển khai
+    environment: prod
+
+spec:
+  # ReplicaSet phải luôn đảm bảo có đúng 3 Pod
+  replicas: 3
+
+  # Selector dùng để xác định Pod nào thuộc ReplicaSet này quản lý
+  selector:
+    matchLabels:
+      # Selector nên dùng các label ổn định
+      # KHÔNG nên dùng version
+      app.kubernetes.io/name: payment-api
+      app.kubernetes.io/instance: payment-api-prod
+
+  # Template mô tả Pod sẽ được tạo như thế nào
+  template:
+
+    # Metadata của Pod
+    metadata:
+      labels:
+        # PHẢI khớp với selector phía trên
+        # Nếu không Kubernetes sẽ báo lỗi
+        app.kubernetes.io/name: payment-api
+
+        app.kubernetes.io/instance: payment-api-prod
+
+        # Version ứng dụng
+        # Chỉ dùng để truy vết/filter
+        # KHÔNG đưa vào selector
+        app.kubernetes.io/version: "v3"
+
+        # Pod thuộc môi trường nào
+        environment: prod
+
+    # Đặc tả Pod
+    spec:
+
+      # Một Pod có thể có nhiều container
+      containers:
+
+        # Container đầu tiên
+        - name: simple-app
+
+          # Docker image sẽ được pull về node
+          #
+          # Cấu trúc:
+          # repository:tag
+          #
+          # repository = vietaws/eks
+          # tag        = v3
+          image: vietaws/eks:v3
+
+          # Ví dụ thực tế thường thêm:
+          #
+          # ports:
+          #   - containerPort: 8080
+          #
+          # resources:
+          #   requests:
+          #     cpu: "100m"
+          #     memory: "128Mi"
+          #   limits:
+          #     cpu: "500m"
+          #     memory: "512Mi"
+          #
+          # livenessProbe:
+          # readinessProbe:

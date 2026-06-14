@@ -1,0 +1,43 @@
+# key value pair
+
+name: vietaws
+age: 18
+
+# dictionary / map data type
+person:
+  name: vietaws
+  age: 18
+  address: hanoi
+
+# array / list data types
+person1:
+  name: vietaws
+  age: 18
+  albums:
+    - name: album1
+      isPublic: true
+      pictures: 70
+    - name: album2
+      isPublic: false
+      pictures: 30
+    - name: album3
+      isPublic: true
+      pictures: 20
+
+# literal style |
+name: vietaws
+age: 18
+description: |
+  This is a very long description
+  about me.
+
+# => This is a very long description\nabout me.\n
+
+# Folded style >
+name: vietaws
+age: 18
+description: >
+  This is a very long description
+  about me.
+
+# => This is a very long description about me
