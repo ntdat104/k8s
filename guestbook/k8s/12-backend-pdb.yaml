@@ -1,0 +1,17 @@
+# ============================================================
+# PodDisruptionBudget cho backend
+# - Dam bao LUC NAO cung co it nhat 2 pod backend chay
+#   khi co "voluntary disruption" (drain node, nang cap...).
+# - Day la 1 phan cua HA o muc production.
+# ============================================================
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backend-pdb
+  namespace: guestbook
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: guestbook
+      app.kubernetes.io/component: backend

@@ -1,0 +1,7 @@
+# Namespace rieng cho he thong guestbook -> de quan ly / xoa gon
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: guestbook
+  labels:
+    app.kubernetes.io/part-of: guestbook

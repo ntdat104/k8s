@@ -1,0 +1,12 @@
+# PodDisruptionBudget cho frontend: luon giu it nhat 1 pod
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend-pdb
+  namespace: guestbook
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: guestbook
+      app.kubernetes.io/component: frontend

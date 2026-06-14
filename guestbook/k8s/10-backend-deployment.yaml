@@ -1,0 +1,131 @@
+# ============================================================
+# BACKEND DEPLOYMENT - production-ready, HA, zero-downtime
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: guestbook
+  labels:
+    app.kubernetes.io/name: guestbook
+    app.kubernetes.io/component: backend
+spec:
+  # HA: 3 ban sao chay song song
+  replicas: 3
+
+  # Giu lai 10 revision gan nhat -> co the rollback
+  revisionHistoryLimit: 10
+
+  # Pod phai "ready" lien tuc 10s moi duoc tinh la on dinh
+  # -> tranh roll qua nhanh khi pod that ra chua chac on
+  minReadySeconds: 10
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: guestbook
+      app.kubernetes.io/component: backend
+
+  # ----- CHIEN LUOC ROLLING UPDATE ZERO-DOWNTIME -----
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # Cho phep tao THEM toi da 1 pod moi khi update
+      maxSurge: 1
+      # KHONG cho phep pod nao bi thieu hut
+      # => luon co du >= replicas pod san sang phuc vu => zero downtime
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: guestbook
+        app.kubernetes.io/component: backend
+    spec:
+      # Khi xoa pod, cho toi da 30s de graceful shutdown (SIGTERM)
+      terminationGracePeriodSeconds: 30
+
+      # Trai deu pod ra cac node (neu cluster nhieu node) -> HA tot hon
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: guestbook
+              app.kubernetes.io/component: backend
+
+      containers:
+        - name: backend
+          # IMAGE v1 (se doi sang v2 khi rolling update)
+          image: guestbook-backend:v1
+          # minikube dung image local -> KHONG pull tu dockerhub
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 8080
+
+          # ----- preStop hook: tranh race khi xoa pod -----
+          # Khi pod bi xoa, K8s vua gui tin hieu dung VUA go pod khoi
+          # Service endpoints (qua kube-proxy) - hai viec nay BAT DONG BO.
+          # Neu app dong server ngay thi co request van bi route vao pod
+          # dang tat -> loi connection (code=000).
+          # Ngu 5s TRUOC khi SIGTERM: pod van phuc vu trong khi kube-proxy
+          # kip go endpoint -> thuc su zero-downtime khi xoa/scale pod.
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
+
+          env:
+            - name: PORT
+              value: "8080"
+            # KHONG set APP_VERSION o day! Phien ban da duoc bake vao image
+            # luc build (--build-arg APP_VERSION=v1|v2). Neu override o day,
+            # `kubectl set image` doi image nhung version van khong doi.
+
+          # ----- RESOURCES: bat buoc cho production -----
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
+
+          # ----- PROBES -----
+          # Startup: cho app khoi dong xong (tranh liveness giet som)
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            failureThreshold: 30
+            periodSeconds: 2
+
+          # Liveness: pod treo -> RESTART
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+
+          # Readiness: pod san sang nhan traffic chua -> go khoi Service neu fail
+          # (Chia khoa cho zero-downtime + rollback an toan)
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+            failureThreshold: 3
+
+          # ----- BAO MAT -----
+          securityContext:
+            runAsNonRoot: true
+            # UID cua user "node" trong image node:alpine.
+            # Bat buoc dung UID so de K8s xac minh duoc khong phai root.
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
