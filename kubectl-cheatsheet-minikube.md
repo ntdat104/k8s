@@ -1,5 +1,23 @@
 # Kubectl Cheat Sheet (Minikube)
 
+## 4. Cluster Architecture
+
+![Ảnh minh họa](./assets/k8s-cluster-architecture.png)
+
+- Trong 1 cluster của k8s gồm 2 thành phần chính:
+  - Thành phần thứ nhất là: Control Plan / Master Node
+  - Thành phần thứ hai là: Worker node 1, Worker node 2 / Data Plan
+- Ứng dụng của mình về mặt kỹ thuật có thể deploy lên cả Master Node lẫn Worker Node
+- Nhưng thông thường best practice thì deploy ứng dụng lên Worker Node
+
+- Trên Master Node có 1 thành phần ETCD là một database cơ sở dữ liệu dạng key/value
+- Trên control plan có một thành phần là Api-Server (api-server sẽ nhận yêu cầu từ quản trị viên)
+- Api Server đi hỏi Schedule, Schedule xem ETCD để xem con Worker node nào phù hợp nhất để triển khai.
+- Trên Worker Node có tác nhân để nhận yêu cầu là Kubelet
+- Trong control plan có thêm tác nhân Controller Manager làm nhiệm vụ quản lý baseline, giám sát các replicaset của các Worker Node
+- Trong control plan có thêm 1 thành phần nữa là Container runtime. Và ở các Worker node cũng đều có Container runtime
+- Để nói chuyện giữa Api Server và các Worker Node thì có 1 dịch vụ để nói chuyện là Kube-proxy
+
 ## 0. Kiem tra verion
 
 ``` bash
@@ -26,6 +44,9 @@ kubectl get pods # Hoac: kubectl get po
 
 # Chay 1 pod voi ten la app1 va image la image tren dockerhub, vietaws/eks (ubuntu), vietaws/arm (macos chip M)
 kubectl run app1 --image=vietaws/eks:v1
+
+# Để xóa pod app1 vừa tạo
+kubectl delete pod app1 # Hoặc: kubectl delete pod app1 --force --grace-period=0 (Xóa ngay lập tức không chờ grace period). Vì mặc định k8s đợi khoảng 30s để pod đóng kết nối an toàn.
 
 # Mornitor trang thai pods chay
 kubectl get pods --watch # Hoac: kubectl get pods -w
