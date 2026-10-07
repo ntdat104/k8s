@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: simple-app
-        image: vietaws/arm:v2
+        image: vietaws/eks:v2
         ports:
         - containerPort: 8080

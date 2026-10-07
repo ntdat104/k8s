@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-app
+spec:
+  containers:
+    - name: simple-app
+      image: vietaws/eks:v2
+      ports:
+        - containerPort: 8080

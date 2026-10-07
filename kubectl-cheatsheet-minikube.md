@@ -117,7 +117,7 @@ kubectl get rs
 kubectl delete rs rs3
 
 # ReplicaSet: Hieu ra cach dung selector
-kubectl run app3-manual --image vietaws/eks:v3 --labels="app=app3,env=prod"
+kubectl run app3-manual --image=vietaws/eks:v3 --labels="app=app3,env=prod"
 kubectl get pods
 kubectl describe pods app3-manual
 kubectl apply -f replicaset-rs.yml
@@ -141,7 +141,7 @@ minikube service service3-declarative --url
 kubectl get pods
 
 # Edit ReplicaSet và Giới Thiệu Deployment
-kubectl get src
+kubectl get svc
 kubectl edit rs rs3 # thay doi image:v3 -> image:v4 thi phai xoa pods cu di, con thay doi replica 3 -> 4 thi khong can xoa
 kubectl get po
 
@@ -185,6 +185,12 @@ kubectl expose deployment nginx-deployment --type=NodePort --port=8081 --target-
 kubectl get svc
 minikube service app1-deploy --url
 minikube service nginx-deployment --url
+
+# Scale & Expose Deployment Dưới Dạng NodePort
+kubectl scale --replicas=2 deployment nginx-deployment
+kubectl expose deployment nginx-deployment --port=8080 --name=svc1 --type=NodePort
+kubectl get svc
+minikube service svc1 --url
 ```
 
 ## 1. Minikube
