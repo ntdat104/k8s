@@ -191,6 +191,51 @@ kubectl scale --replicas=2 deployment nginx-deployment
 kubectl expose deployment nginx-deployment --port=8080 --name=svc1 --type=NodePort
 kubectl get svc
 minikube service svc1 --url
+
+# Set Container Image on Deployment K8s
+kubectl apply -f deploy1.yml
+kubectl edit deployment nginx-deployment # Sửa replicas từ 3 -> 4
+kubectl get po # -> ok lên 4 replicas
+# giờ muốn đổi image từ v1 -> v2
+kubectl set image --help
+kubectl set image deployment nginx-deployment --help
+kubectl set image deployment nginx-deployment simple-app=vietaws/arm:v3
+
+# Rollout Deployment Kubernetes
+kubectl apply -f deploy1.yml
+kubectl set image deployment nginx-deployment simple-app=vietaws/arm:v3
+kubectl rollout history --help
+kubectl rollout history deployment nginx-deployment
+kubectl rollout status deployment nginx-deployment
+kubectl edit deployments.apps nginx-deployment # sửa v3 -> v4
+kubectl get po -w
+
+# Rollback Deployment Kubernetes
+kubectl apply -f deploy1.yml
+kubectl set image deployment nginx-deployment simple-app=vietaws/arm:v3
+kubectl set image deployment nginx-deployment simple-app=vietaws/arm:v4
+kubectl rollout history --help
+kubectl rollout history deployment nginx-deployment --revision=1
+kubectl rollout undo deployment nginx-deployment
+kubectl rollout undo deployment nginx-deployment --to-revision=3
+
+# Pause & Resume Deployment
+kubectl set resources --help
+kubectl rollout pause --help
+kubectl rollout pause deployment nginx-deployment
+kubectl set image deployment nginx-deployment simple-app=vietaws/arm:v3
+kubectl set resources deployment nginx-deployment -c=simple-app --limits=cpu=200m,memory=512Mi # không chạy vì đang bị pause
+kubectl rollout resume deployment nginx-deployment
+kubectl get po
+kubectl describe deployment nginx-deployment
+
+# Change Cause on Deployment Revision
+kubectl apply -f deploy1.yml
+kubectl annotate deployment nginx-deployment kubernetes.io/change-cause="image updated to vietaws/arm:v4"
+kubectl edit deployment nginx-deployment
+kubectl rollout history deployment nginx-deployment
+
+# Recreate vs RollingUpdate Deployment Strategies
 ```
 
 ## 1. Minikube
