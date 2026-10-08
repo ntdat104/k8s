@@ -18,13 +18,13 @@
 - Trong control plan có thêm 1 thành phần nữa là Container runtime. Và ở các Worker node cũng đều có Container runtime
 - Để nói chuyện giữa Api Server và các Worker Node thì có 1 dịch vụ để nói chuyện là Kube-proxy
 
-## 0. Kiem tra verion
+## 0. Kiểm tra version
 
 ``` bash
-# Kiem tra verion cua k8s
+# Kiểm tra version của k8s
 kubectl version --client
 
-# Kiem tra verion cua minikube
+# Kiểm tra version của minikube
 minikube version
 
 # Khởi động Minikube
@@ -33,90 +33,108 @@ minikube start
 # Kiểm tra trạng thái
 minikube status
 
-# Xem pod voi tat ca namespace
+# Xem danh sách namespaces
+kubectl get namespaces # hoặc viết tắt kubectl get ns
+
+# Tạo namespace dev
+kubectl create namespace dev
+
+# Tạo Pod trong namespace dev
+kubectl run nginx-dev --image=nginx -n dev
+
+# Xem các tài nguyên trong namespace dev
+kubectl get pods -n dev
+
+# Đổi Namespace mặc định cho ngữ cảnh (Context)
+kubectl config set-context --current --namespace=dev
+
+# Xóa Namespace
+kubectl delete namespace dev
+
+# Xem pod với tất cả namespace
 kubectl get pods -A # Hoặc: kubectl get po -A
 
 # Xem node
 kubectl get nodes
 
-# Xem pod voi default namespace
-kubectl get pods # Hoac: kubectl get po
+# Xem pod với namespace mặc định
+kubectl get pods # Hoặc: kubectl get po
 
-# Chay 1 pod voi ten la app1 va image la image tren dockerhub, vietaws/eks (ubuntu), vietaws/arm (macos chip M)
+# Chạy 1 pod với tên là app1 và image là image trên dockerhub, vietaws/eks (ubuntu), vietaws/arm (macos chip M)
 kubectl run app1 --image=vietaws/eks:v1
 
 # Để xóa pod app1 vừa tạo
 kubectl delete pod app1 # Hoặc: kubectl delete pod app1 --force --grace-period=0 (Xóa ngay lập tức không chờ grace period). Vì mặc định k8s đợi khoảng 30s để pod đóng kết nối an toàn.
 
-# Mornitor trang thai pods chay
-kubectl get pods --watch # Hoac: kubectl get pods -w
+# Monitor trạng thái pods chạy
+kubectl get pods --watch # Hoặc: kubectl get pods -w
 
-# Xem thong tin cua pods
+# Xem thông tin của pods
 kubectl describe pods app1
 
-# Trong truong hop minh update version o tren dockerhub thi khi chay mot cai image thi minh phai them '--image-pull-policy Always'
-kubectl run --image=vietaws/eks:v1 --image-pull-policy Always
+# Trong trường hợp mình update version ở trên dockerhub thì khi chạy một cái image thì mình phải thêm '--image-pull-policy Always'
+kubectl run app2 --image=vietaws/eks:v1 --image-pull-policy Always
 
-# Co 2 cach de expose port cua pods ra ben ngoai: NodePort va LoadBalancer. LoadBalancer dung trong cong cu cloud provider ELP, con NodePort thi expose dang node theo dai port 30,000 -> 32,767 (random)
+# Có 2 cách để expose port của pods ra bên ngoài: NodePort và LoadBalancer. LoadBalancer dùng trong công cụ cloud provider ELP, còn NodePort thì expose dạng node theo dải port 30,000 -> 32,767 (random)
 
-# De muon goi tu ung dung ben ngoai vao trong noi bo cluster thi phai tao 1 cai service (svc)
-kubectl get services # Hoac kubectl get svc
+# Để muốn gọi từ ứng dụng bên ngoài vào trong nội bộ cluster thì phải tạo 1 cái service (svc)
+kubectl get services # Hoặc kubectl get svc
 
-# Muon expose ra ben ngoai thi dung
+# Muốn expose ra bên ngoài thì dùng
 kubectl expose --help
 kubectl expose service nginx --port=443 --target-port=8443 --name=nginx-https
 kubectl expose pods app1 --port=8081 --target-port=8080 --name=service1 --type=NodePort
 kubectl get svc
 
-# Xem thong tin chi tiet cua mot cai port
+# Xem thông tin chi tiết của một cái port
 kubectl describe svc service1
 kubectl get svc
 kubectl get nodes
-kubectl get nodes -o wide # Xem thong tin chi tiet
+kubectl get nodes -o wide # Xem thông tin chi tiết
 
-# Expose port ra ben ngoai (minikube)
+# Expose port ra bên ngoài (minikube)
 minikube service service1 --url
 
 kubectl describe pods app1
 kubectl get svc
 
-# Xem log cua pods
+# Xem log của pods
 kubectl logs app1
 kubectl logs app1 -f
 
-# Trong truong hop 1 pod co nhieu container thi phai dung cu phap khac
+# Trong trường hợp 1 pod có nhiều container thì phải dùng cú pháp khác
 kubectl logs app1 -c app1 log1 -f
 
-# Kiem thu chui vao pods va container (exec)
+# Kiểm thử chui vào pods và container (exec)
 kubectl exec -it app1 -- ls
 kubectl exec -it app1 -- cat index.js
 kubectl exec -it app1 -- sh
 
-# Imperative vs Declarative (Imperative la go tung lenh 1, Declarative dung file yml)
+# Imperative vs Declarative (Imperative là gõ từng lệnh 1, Declarative dùng file yml)
 kubectl apply -f pod.yml
 kubectl get pods -w
 kubectl describe pods simple-app
 
-# ReplicaSet: Dinh nghia toi muon chay 1 nhom cac con pod, voi so luong la replicas: 3
+# ReplicaSet: Định nghĩa tôi muốn chạy 1 nhóm các con pod, với số lượng là replicas: 3
 kubectl get pods
-kubectl get replicasets.apps # Hoac kubectl get rs
+kubectl get replicasets.apps # Hoặc kubectl get rs
 
 kubectl apply -f replicaset-rs.yml
 kubectl get rs
-kubectl delete -f replicaset-rs.yml # Hoac kubectl delete rs rs3
+kubectl delete -f replicaset-rs.yml # Hoặc kubectl delete rs rs3
 kubectl get po
 
 kubectl describe replicasets.apps rs3
 kubectl describe rs rs3
 
 kubectl get pods
-kubectl delete pod rs3-nhgjq # Sau khi xoa 1 pod thi tu dong tao 1 con pod moi
+kubectl delete pod rs3-nhgjq # Sau khi xóa 1 pod thì tự động tạo 1 con pod mới
 
 kubectl get svc
 kubectl get rs
 kubectl delete rs rs3
 
-# ReplicaSet: Hieu ra cach dung selector
+# ReplicaSet: Hiểu rõ cách dùng selector
 kubectl run app3-manual --image=vietaws/eks:v3 --labels="app=app3,env=prod"
 kubectl get pods
 kubectl describe pods app3-manual
@@ -142,7 +160,7 @@ kubectl get pods
 
 # Edit ReplicaSet và Giới Thiệu Deployment
 kubectl get svc
-kubectl edit rs rs3 # thay doi image:v3 -> image:v4 thi phai xoa pods cu di, con thay doi replica 3 -> 4 thi khong can xoa
+kubectl edit rs rs3 # thay đổi image:v3 -> image:v4 thì phải xóa pods cũ đi, còn thay đổi replica 3 -> 4 thì không cần xóa
 kubectl get po
 
 kubectl get pods
@@ -163,7 +181,7 @@ kubectl delete svc service1 service3 service3-declarative
 kubectl get svc
 
 kubectl create deployment --help
-kubectl create deploy app1-deploy --image vietaws/eks:v1 --port 8080 # Hoac kubectl create deployment app1-deploy --image vietaws/eks:v1 --port 8080
+kubectl create deploy app1-deploy --image vietaws/eks:v1 --port 8080 # Hoặc kubectl create deployment app1-deploy --image vietaws/eks:v1 --port 8080
 kubectl get deployment
 kubectl get svc
 kubectl get rs
@@ -236,6 +254,67 @@ kubectl edit deployment nginx-deployment
 kubectl rollout history deployment nginx-deployment
 
 # Recreate vs RollingUpdate Deployment Strategies
+kubectl apply -f deploy1.yml
+kubectl edit deployment nginx-deployment
+# Sửa type Strategies từ RollingUpdate -> Recreate
+# strategy:
+#   type: Recreate
+kubectl get po -w
+
+# Progress Deadline Seconds
+progressDeadlineSeconds: 200
+
+# Restart Deployment
+kubectl apply -f deploy1.yml
+kubectl rollout restart deployment nginx-deployment
+
+# Services | ClusterIP vs NodePort vs LoadBalancer vs ExternalName | Kubernetes
+kubectl api-resources | grep services
+kubectl apply -f clusterip.yml
+kubectl get svc
+kubectl run pod1 --image=vietaws/eks:v1 --port=8080 -l="app=app1,env=demo"
+kubectl describe po pod1
+kubectl get svc
+kubectl describe svc clusterip-svc
+kubectl get po -o wide
+kubectl run pod2 --image=vietaws/eks:v1 --port=8080 -l="app=app1,env=demo"
+kubectl describe svc clusterip-svc # Endpoints: 10.244.0.15:8080,10.244.0.16:8080
+kubectl delete po pod2
+kubectl exec -it pod1 -- sh
+ifconfig
+nslookup clusterip-svc
+exit
+kubectl get svc
+kubectl apply -f loadbalancer.yml
+kubectl get svc
+
+# Namespace
+kubectl describe po pod1
+kubectl api-resources | grep namespace
+kubectl get ns
+kubectl get po -A
+kubectl get po -n default
+kubectl get po -n kube-system
+kubectl create namespace dev
+kubectl get ns
+kubectl run pod1 --image=vietaws/eks:v1 --port=8080 -n dev
+kubectl get po -n dev
+kubectl get po -n default
+kubectl describe po pod1 -n dev
+kubectl get po -o wide -n dev
+kubectl exec -it pod1 -n dev -- sh
+curl 10.244.0.122
+kubectl api-resources | grep pod
+kubectl api-resources | grep services
+kubectl api-resources | grep pv
+kubectl get svc -A
+
+# Curl Pod
+kubectl apply -f curl.yml
+kubectl get po
+kubectl exec -it curl-pod -- sh
+curl simplize.vn
+curl nodeport-svc.ns1.svc.cluster.local:8080
 ```
 
 ## 1. Minikube
